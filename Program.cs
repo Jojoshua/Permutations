@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,12 +35,12 @@ namespace Permutations
 
             //Inputs
             num_cols = 5; //Random Cols
-            num_rows = 5; //Random Rows
+            num_rows = 3; //Random Rows
             middleRequires = 6; //Middle cell requires
             borderRequires = 3; //Border cell requires
             border_type = "collapse"; //Border style
             //border_type = "separate";
-            openHtml = false;
+            openHtml = true;
 
 
             //Check if loading a matrix by file. If not use random
@@ -57,15 +57,15 @@ namespace Permutations
                     return;
                 }
 
-                reference_matrix = new int[num_cols, num_rows];
-                permutation_matrix = new int[num_cols, num_rows];
+                reference_matrix = new int[num_rows, num_cols];
+                permutation_matrix = new int[num_rows, num_cols];             
 
-                Random r = new Random();
+                Random r = new Random();                      
 
                 //Make random starting matrix
-                for (int i = 0; i < num_cols; i++)
+                for (int i = 0; i < num_rows; i++)
                 {
-                    for (int j = 0; j < num_rows; j++)
+                    for (int j = 0; j < num_cols; j++)
                     {
                         if (r.NextDouble() > 0.5)
                         {
@@ -80,7 +80,7 @@ namespace Permutations
             }
         
 
-            colList = new int[num_rows];
+            colList = new int[num_cols];
             for (int i = 0; i < num_cols; i++)
             {
                 colList[i] = i;
@@ -147,7 +147,7 @@ namespace Permutations
 
             for (int i = 0; i < num_rows; i++)
             {
-                col[i] = reference_matrix[index, i];
+                col[i] = reference_matrix[i,index];
             }
 
             return col;
@@ -170,13 +170,14 @@ namespace Permutations
                     //Get one whole column of the matrix ( first column =  1 1 0 1)
                     int[] col_line = getColumn(colList[i]);
 
-                    //Insert column into new matrix at a new position
+                    //Insert column into new matrix at a new position                  
                     for (int j = 0; j < col_line.Length; j++)
                     {
-                        permutation_matrix[i, j] = col_line[j];
+                        permutation_matrix[j,i] = col_line[j];
                     }
+                                 
                 }
-
+                
                 //Append HTML table of new matrix
                 AppendHTMLTable(colList);
 
@@ -206,9 +207,9 @@ namespace Permutations
                 html_main.AppendLine("<tr>");
                 for (int j = 0; j < num_cols; j++)
                 {
-                    matrix_value = permutation_matrix[j, i].ToString();
+                    matrix_value = permutation_matrix[i, j].ToString();
                     //Check if this 0 might should turn black to make a square
-                    if (matrix_value == "0" && shouldBlack(j, i))
+                    if (matrix_value == "0" && shouldBlack(i, j))
                     {
                         //permutation_matrix[j, i] = 1;//This would make this really count as a neighbor for future cells
                         matrix_value = "2";//Make it a different color to denote a change
@@ -244,7 +245,7 @@ namespace Permutations
         }
 
         //Determine how many neighbors are required for me
-        static public int getRequiredNeighbors(int col, int row)
+        static public int getRequiredNeighbors(int row, int col)
         {
             //If you are on the border, you require less
             if (col == num_cols - 1 || col == 0 || row == 0 || row == num_rows - 1)
@@ -256,19 +257,19 @@ namespace Permutations
         }
 
         //If I have 3 neighbors that are black, maybe I should be changed to make a square 
-        static public bool shouldBlack(int col, int row)
+        static public bool shouldBlack(int row, int col)
         {
             int num_black_neighbors = 0;
             bool shouldBlack = false;
 
             //See how many neighbors this index requires to fulfill requirement
-            requires = getRequiredNeighbors(col, row);
+            requires = getRequiredNeighbors(row,col);
 
 
             //Top Left       
             if (row > 0 && col > 0)
             {
-                if (foundBlack(minus(col), minus(row)))
+                if (foundBlack(minus(row), minus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -276,7 +277,7 @@ namespace Permutations
             //Top
             if (row > 0)
             {
-                if (foundBlack(col, minus(row)))
+                if (foundBlack(minus(row), col))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -284,7 +285,7 @@ namespace Permutations
             //Top Right       
             if (row > 0 && col < num_cols - 1)
             {
-                if (foundBlack(plus(col), minus(row)))
+                if (foundBlack(minus(row), plus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -292,7 +293,7 @@ namespace Permutations
             //Right
             if (col < num_cols - 1)
             {
-                if (foundBlack(plus(col), row))
+                if (foundBlack(row, plus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -300,7 +301,7 @@ namespace Permutations
             //Bottom Right
             if (row < num_rows - 1 && col < num_cols - 1)
             {
-                if (foundBlack(plus(col), plus(row)))
+                if (foundBlack(plus(row), plus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -308,7 +309,7 @@ namespace Permutations
             //Bottom
             if (row < num_rows - 1)
             {
-                if (foundBlack(col, plus(row)))
+                if (foundBlack(plus(row), col))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -316,7 +317,7 @@ namespace Permutations
             //Botton Left
             if (row > 0 && col > 0 && plus(row) < num_rows)
             {
-                if (foundBlack(minus(col), plus(row)))
+                if (foundBlack(plus(row), minus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -324,7 +325,7 @@ namespace Permutations
             //Left
             if (col > 0)
             {
-                if (foundBlack(minus(col), row))
+                if (foundBlack(row, minus(col)))
                 {
                     if (checkDone(num_black_neighbors, out num_black_neighbors)) return true;
                 }
@@ -334,10 +335,10 @@ namespace Permutations
         }
 
 
-        static public bool foundBlack(int col, int row)
+        static public bool foundBlack(int row, int col)
         {
             bool is_black = false;
-            if (permutation_matrix[col, row] == 1)
+            if (permutation_matrix[row, col] == 1)
             {
                 is_black = true;
             }
@@ -359,7 +360,7 @@ namespace Permutations
 
 
         static public void initHtmlFile()
-        {
+        {           
             if (File.Exists(main_html_path))
             {
                 File.Delete(main_html_path);
@@ -414,7 +415,7 @@ namespace Permutations
                     matrix_row = "";
                     for (int j = 0; j < num_cols; j++)
                     {
-                        matrix_row = matrix_row + reference_matrix[j, i].ToString();
+                        matrix_row = matrix_row + reference_matrix[i,j].ToString();
                     }
                     sw.WriteLine(matrix_row);
                 }
@@ -441,7 +442,7 @@ namespace Permutations
                     for (int i = 0; i < num_cols; i++)
                     {
                         number = int.Parse(line.Substring(i, 1));
-                        reference_matrix[i, line_counter] = number;
+                        reference_matrix[line_counter,i] = number;
                     }
 
                     line_counter++;
@@ -486,8 +487,8 @@ namespace Permutations
                 row_count++;
             }
             num_rows = row_count;
-            reference_matrix = new int[num_cols, num_rows];
-            permutation_matrix = new int[num_cols, num_rows];
+            reference_matrix = new int[num_rows, num_cols];
+            permutation_matrix = new int[num_rows, num_cols];
             file.Close();
 
             return true;
